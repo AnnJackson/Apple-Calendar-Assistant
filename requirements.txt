@@ -1,0 +1,4 @@
+Flask==3.0.2
+pyobjc==10.2
+pyobjc-framework-EventKit==10.2
+python-dotenv==1.0.1
