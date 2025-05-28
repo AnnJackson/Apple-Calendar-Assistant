@@ -1,0 +1,248 @@
+openapi: 3.1.0
+info:
+  title: Local Apple Calendar API
+  version: "1.0"
+  description: |
+    Read and write your local Apple Calendar via EventKit-backed endpoints.
+servers:
+  - url: https://YOUR-SERVER-URL.ngrok-free.app
+paths:
+  /listEvents:
+    get:
+      summary: List calendar events in a date range
+      operationId: listEvents
+      parameters:
+        - in: query
+          name: start
+          schema:
+            type: string
+            format: date-time
+          required: true
+        - in: query
+          name: end
+          schema:
+            type: string
+            format: date-time
+          required: true
+      responses:
+        "200":
+          description: A list of events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Event"
+  /createEvent:
+    post:
+      summary: Create a new event
+      operationId: createEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewEvent"
+      responses:
+        "201":
+          description: The created event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+  /deleteEvent:
+    delete:
+      summary: Delete an event by ID
+      operationId: deleteEvent
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: Deleted event ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deletedId:
+                    type: string
+  /updateEvent:
+    post:
+      summary: Update an existing event
+      operationId: updateEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateEvent"
+      responses:
+        "200":
+          description: Updated event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+  /summarizeEvents:
+    get:
+      summary: Get a plain-text summary of events
+      operationId: summarizeEvents
+      parameters:
+        - in: query
+          name: start
+          schema:
+            type: string
+            format: date-time
+          required: true
+        - in: query
+          name: end
+          schema:
+            type: string
+            format: date-time
+          required: true
+      responses:
+        "200":
+          description: Natural-language summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summary:
+                    type: string
+
+  /nextEvent:
+    get:
+      summary: Get the next occurrence of an event matching a keyword
+      operationId: nextEvent
+      parameters:
+        - in: query
+          name: keyword
+          schema:
+            type: string
+          required: true
+          description: The keyword to search for in event titles
+      responses:
+        "200":
+          description: The next matching event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+        "404":
+          description: No upcoming events found matching the keyword
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Error message indicating no matches
+
+  /searchByLocation:
+    get:
+      summary: Search events by location keyword
+      operationId: searchByLocation
+      parameters:
+        - in: query
+          name: location
+          schema:
+            type: string
+          required: true
+          description: Substring to match in event location
+      responses:
+        "200":
+          description: A list of matching events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Event"
+        "400":
+          description: Missing location parameter
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "404":
+          description: No events found matching the location
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+components:
+  schemas:
+    Event:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        location:
+          type: string
+          description: Event location (optional)
+        start:
+          type: string
+        end:
+          type: string
+    NewEvent:
+      type: object
+      required:
+        - title
+        - start
+        - end
+      properties:
+        title:
+          type: string
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+        location:
+          type: string
+          description: Event location (optional)
+    EventId:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+    UpdateEvent:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+        location:
+          type: string
+          description: Updated event location (optional)
+        instanceStart:
+          type: string
+          format: date-time
+          description: UTC timestamp of the specific recurring occurrence to update (optional)
